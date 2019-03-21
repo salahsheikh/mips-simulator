@@ -1,3 +1,5 @@
+use std::ops::BitOr;
+
 use crate::parser;
 
 #[derive(Debug)]
@@ -8,12 +10,12 @@ pub enum InstructionType {
 }
 
 pub struct Instruction {
-    instruction: String,
-    itype: InstructionType
+    pub instruction: String,
+    pub itype: InstructionType
 }
 
 impl Instruction {
-    fn execute(&self, processor: &mut Processor) {
+    pub fn execute(&self, processor: &mut Processor) {
         let components: Vec<String> = self.instruction.split(" ").map(|s| s.to_string().replace(',', "")).collect();
         match self.itype {
             InstructionType::IType => {
@@ -48,6 +50,7 @@ pub struct Processor {
 }
 
 impl Processor {
+    /// Initialize with basic constants
     pub fn new() -> Processor {
         let mut proc = Processor {
             gpr: [0; 32],
