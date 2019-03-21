@@ -17,6 +17,7 @@ pub fn parse_function(instruction: String) -> Option<architecture::Instruction> 
     let i_types = vec!["addi", "addiu", "slti", "sltiu", "andi", "ori", "xori", "lui"];
     let r_types = vec!["and"];
     let special_types = vec!["nop"];
+    let j_types = vec!["j", "jr"];
     for instr_type in &r_types {
         if instruction.starts_with(instr_type) {
             let instr = architecture::Instruction { instruction: instruction.clone(), itype: architecture::InstructionType::RType };
@@ -26,6 +27,12 @@ pub fn parse_function(instruction: String) -> Option<architecture::Instruction> 
     for instr_type in &i_types {
         if instruction.starts_with(instr_type) {
             let instr = architecture::Instruction { instruction: instruction.clone(), itype: architecture::InstructionType::IType };
+            return Some(instr);
+        }
+    }
+    for instr_type in &j_types {
+        if instruction.starts_with(instr_type) {
+            let instr = architecture::Instruction { instruction: instruction.clone(), itype: architecture::InstructionType::JType };
             return Some(instr);
         }
     }

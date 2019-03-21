@@ -2,6 +2,7 @@ use std::ops::BitOr;
 use std::ops::BitAnd;
 
 use crate::parser;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum InstructionType {
@@ -21,7 +22,8 @@ pub struct Processor {
     pc: u32,
     hi: u32,
     lo: u32,
-    instructions: Vec<Instruction>
+    instructions: Vec<Instruction>,
+    labels: HashMap<String, u32>
 }
 
 impl Processor {
@@ -32,7 +34,8 @@ impl Processor {
             pc: 0x00400000,
             hi: 0x0,
             lo: 0x0,
-            instructions: Vec::new()
+            instructions: Vec::new(),
+            labels: HashMap::new()
         };
         proc.gpr[29] = 0x7fffeffc;
         proc
@@ -48,64 +51,85 @@ impl Processor {
         self.gpr[source_gpr as usize]
     }
 
+    pub fn add_label(&mut self, label: String) {
+        self.labels.insert(label.replace(':', ""), self.pc);
+    }
+
     pub fn add_instruction(&mut self, instr: Instruction) {
         self.instructions.push(instr);
     }
 
-    fn get_instruction(&self, address: u32) -> &Instruction {
-        self.instructions.get((address - 0x00400000) as usize / 4).unwrap()
+    fn get_instruction(&self, address: u32) -> Option<&Instruction> {
+        self.instructions.get((address - 0x00400000) as usize / 4)
     }
 
     pub fn next(&mut self) {
-        let current: &Instruction = self.get_instruction(self.pc);
-        let components: Vec<String> = current.instruction.split(" ").map(|s| s.to_string().replace(',', "")).collect();
-        let mut branch: bool = false;
-        match current.itype {
-            InstructionType::IType => {
-                let dest: u8 = parser::parse_register(components.get(1).unwrap());
-                let source: u8 = parser::parse_register(components.get(2).unwrap());
-                let immediate: u16 = parser::parse_hexadecimal(components.get(3).unwrap());
-                match components.get(0).unwrap().as_str() {
-                    "ori" => {
-                        self.set_value(dest, self.get_value(source).bitor(immediate as u32));
+        println!("Current: {:X}", self.pc);
+        let current: Option<&Instruction> = self.get_instruction(self.pc);
+        match current {
+            Some(instr) => {
+                let components: Vec<String> = instr.instruction.split(" ").map(|s| s.to_string().replace(',', "")).collect();
+                let mut branch: bool = false;
+                match instr.itype {
+                    InstructionType::IType => {
+                        let dest: u8 = parser::parse_register(components.get(1).unwrap());
+                        let source: u8 = parser::parse_register(components.get(2).unwrap());
+                        let immediate: u16 = parser::parse_hexadecimal(components.get(3).unwrap());
+                        match components.get(0).unwrap().as_str() {
+                            "ori" => {
+                                self.set_value(dest, self.get_value(source).bitor(immediate as u32));
+                            },
+                            _ => {
+                                panic!("Unhandled I-type instruction!");
+                            }
+                        }
                     },
-                    _ => {
-                        panic!("Unhandled I-type instruction!");
-                    }
-                }
-            },
-            InstructionType::RType => {
-                let dest: u8 = parser::parse_register(components.get(1).unwrap());
-                let rs: u8 = parser::parse_register(components.get(2).unwrap());
-                let rt: u8 = parser::parse_register(components.get(3).unwrap());
-                match components.get(0).unwrap().as_str() {
-                    "and" => {
-                        let temp = self.get_value(rs).bitand(self.get_value(rt));
-                        self.set_value(dest, temp);
+                    InstructionType::RType => {
+                        let dest: u8 = parser::parse_register(components.get(1).unwrap());
+                        let rs: u8 = parser::parse_register(components.get(2).unwrap());
+                        let rt: u8 = parser::parse_register(components.get(3).unwrap());
+                        match components.get(0).unwrap().as_str() {
+                            "and" => {
+                                let temp = self.get_value(rs).bitand(self.get_value(rt));
+                                self.set_value(dest, temp);
+                            },
+                            _ => {
+                                panic!("Unhandled R-type instruction!");
+                            }
+                        }
                     },
-                    _ => {
-                        panic!("Unhandled R-type instruction!");
-                    }
-                }
-            },
-            InstructionType::JType => {
+                    InstructionType::JType => {
+                        match components.get(0).unwrap().as_str() {
+                            "j" => {
+                                if self.labels.contains_key(components.get(1).unwrap()) {
+                                    branch = true;
+                                    self.pc = self.labels.get(components.get(1).unwrap()).clone().unwrap().clone();
+                                }
+                            },
+                            "jr" => {
+                                self.pc = self.get_value(parser::parse_register(components.get(1).unwrap()));
+                            },
+                            _ => {
+                                unreachable!();
+                            }
+                        }
+                    },
+                    InstructionType::Special => {
+                        match components.get(0).unwrap().as_str() {
+                            "nop" => {
+                                // Do nothing
+                            },
+                            _ => {
 
-            },
-            InstructionType::Special => {
-                match components.get(0).unwrap().as_str() {
-                    "nop" => {
-                        // Do nothing
-                    },
-                    _ => {
-
+                            }
+                        }
                     }
+                };
+                if !branch {
+                    self.pc += 4;
                 }
-            }
-        };
-        if branch {
-            // branching code
-        } else {
-            self.pc += 4;
+            },
+            None => {}
         }
     }
 
@@ -116,4 +140,5 @@ impl Processor {
     pub fn print_state(&self) {
         println!("{:?}\n {}, {}, {:X}", self.gpr, self.hi, self.lo, self.pc);
     }
+
 }

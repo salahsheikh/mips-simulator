@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
-use crate::architecture::Instruction;
 
 pub mod architecture;
 pub mod parser;
@@ -21,13 +20,14 @@ fn main() {
     for line in reader.lines() {
         let instr: String = line.unwrap();
         if !instr.is_empty() {
-            proc.add_instruction(parser::parse_function(instr).unwrap());
+            if instr.contains(':') {
+                proc.add_label(instr);
+            } else {
+                proc.add_instruction(parser::parse_function(instr).unwrap());
+            }
         }
     }
 
-    for i in 0..proc.get_instruction_count() {
-        proc.next();
-    }
-
+    proc.next();
     proc.print_state();
 }
