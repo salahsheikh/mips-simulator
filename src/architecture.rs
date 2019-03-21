@@ -1,4 +1,5 @@
 use std::ops::BitOr;
+use std::ops::BitAnd;
 
 use crate::parser;
 
