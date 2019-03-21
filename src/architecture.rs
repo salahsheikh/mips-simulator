@@ -15,60 +15,12 @@ pub struct Instruction {
     pub itype: InstructionType
 }
 
-impl Instruction {
-
-    fn execute_itype(&self, processor: &mut Processor, components: Vec<String>) {
-        let dest: u8 = parser::parse_register(components.get(1).unwrap());
-        let source: u8 = parser::parse_register(components.get(2).unwrap());
-        let immediate: u16 = parser::parse_hexadecimal(components.get(3).unwrap());
-        match components.get(0).unwrap().as_str() {
-            "ori" => {
-                processor.set_value(dest, processor.get_value(source).bitor(immediate as u32));
-            },
-            _ => {
-                panic!("Unhandled I-type instruction!");
-            }
-        }
-    }
-
-    fn execute_rtype(&self, processor: &mut Processor, components: Vec<String>) {
-        let dest: u8 = parser::parse_register(components.get(1).unwrap());
-        let rs: u8 = parser::parse_register(components.get(2).unwrap());
-        let rt: u8 = parser::parse_register(components.get(3).unwrap());
-        match components.get(0).unwrap().as_str() {
-            "and" => {
-                let temp = processor.get_value(rs).bitand(processor.get_value(rt));
-                processor.set_value(dest, temp);
-            },
-            _ => {
-                panic!("Unhandled R-type instruction!");
-            }
-        }
-    }
-
-    pub fn execute(&self, processor: &mut Processor) {
-        let components: Vec<String> = self.instruction.split(" ").map(|s| s.to_string().replace(',', "")).collect();
-        match self.itype {
-            InstructionType::IType => {
-                self.execute_itype(processor, components);
-            },
-            InstructionType::RType => {
-                self.execute_rtype(processor, components);
-            },
-            InstructionType::JType => {
-
-            }
-        };
-    }
-
-}
-
-#[derive(Debug)]
 pub struct Processor {
     gpr: [u32; 32],
     pc: u32,
     hi: u32,
-    lo: u32
+    lo: u32,
+    instructions: Vec<Instruction>
 }
 
 impl Processor {
@@ -78,7 +30,8 @@ impl Processor {
             gpr: [0; 32],
             pc: 0x00400000,
             hi: 0x0,
-            lo: 0x0
+            lo: 0x0,
+            instructions: Vec::new()
         };
         proc.gpr[29] = 0x7fffeffc;
         proc
@@ -92,5 +45,60 @@ impl Processor {
 
     pub fn get_value(&self, source_gpr: u8) -> u32 {
         self.gpr[source_gpr as usize]
+    }
+
+    pub fn add_instruction(&mut self, instr: Instruction) {
+        self.instructions.push(instr);
+    }
+
+    fn get_instruction(&self, address: u32) -> &Instruction {
+        self.instructions.get((address - 0x00400000) as usize / 4).unwrap()
+    }
+
+    pub fn next(&mut self) {
+        let current: &Instruction = self.get_instruction(self.pc);
+        let components: Vec<String> = current.instruction.split(" ").map(|s| s.to_string().replace(',', "")).collect();
+        match current.itype {
+            InstructionType::IType => {
+                let dest: u8 = parser::parse_register(components.get(1).unwrap());
+                let source: u8 = parser::parse_register(components.get(2).unwrap());
+                let immediate: u16 = parser::parse_hexadecimal(components.get(3).unwrap());
+                match components.get(0).unwrap().as_str() {
+                    "ori" => {
+                        self.set_value(dest, self.get_value(source).bitor(immediate as u32));
+                        self.pc += 4;
+                    },
+                    _ => {
+                        panic!("Unhandled I-type instruction!");
+                    }
+                }
+            },
+            InstructionType::RType => {
+                let dest: u8 = parser::parse_register(components.get(1).unwrap());
+                let rs: u8 = parser::parse_register(components.get(2).unwrap());
+                let rt: u8 = parser::parse_register(components.get(3).unwrap());
+                match components.get(0).unwrap().as_str() {
+                    "and" => {
+                        let temp = self.get_value(rs).bitand(self.get_value(rt));
+                        self.set_value(dest, temp);
+                        self.pc += 4;
+                    },
+                    _ => {
+                        panic!("Unhandled R-type instruction!");
+                    }
+                }
+            },
+            InstructionType::JType => {
+
+            }
+        };
+    }
+
+    pub fn get_instruction_count(&self) -> usize {
+        self.instructions.len()
+    }
+
+    pub fn print_state(&self) {
+        println!("{:?}\n {}, {}, {:X}", self.gpr, self.hi, self.lo, self.pc);
     }
 }
