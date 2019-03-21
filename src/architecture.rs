@@ -53,7 +53,7 @@ impl Instruction {
                 self.execute_itype(processor, components);
             },
             InstructionType::RType => {
-
+                self.execute_rtype(processor, components);
             },
             InstructionType::JType => {
 
