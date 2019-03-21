@@ -25,7 +25,15 @@ pub fn parse_function(instruction: String) -> Option<architecture::Instruction> 
 }
 
 pub fn parse_register(register: &str) -> u8 {
-    let result = match register {
+    let result: u8 = match register {
+        "$zero" => 0,
+        "$at" => 1,
+        "$v0" => 2,
+        "$v1" => 3,
+        "$a0" => 4,
+        "$a1" => 5,
+        "$a2" => 6,
+        "$a3" => 7,
         "$t0" => 8,
         "$t1" => 9,
         "$t2" => 10,
@@ -34,8 +42,22 @@ pub fn parse_register(register: &str) -> u8 {
         "$t5" => 13,
         "$t6" => 14,
         "$t7" => 15,
-        "$t8" => 16,
-        "$t9" => 17,
+        "$s0" => 16,
+        "$s1" => 17,
+        "$s2" => 18,
+        "$s3" => 19,
+        "$s4" => 20,
+        "$s5" => 21,
+        "$s6" => 22,
+        "$s7" => 23,
+        "$t8" => 24,
+        "$t9" => 25,
+        "$k0" => 26,
+        "$k1" => 27,
+        "$gp" => 28,
+        "$sp" => 29,
+        "$fp" => 30,
+        "$ra" => 31,
         _ => {
             panic!("Invalid register type!");
         }
