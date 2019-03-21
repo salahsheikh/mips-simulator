@@ -58,6 +58,7 @@ impl Processor {
     pub fn next(&mut self) {
         let current: &Instruction = self.get_instruction(self.pc);
         let components: Vec<String> = current.instruction.split(" ").map(|s| s.to_string().replace(',', "")).collect();
+        let mut branch: bool = false;
         match current.itype {
             InstructionType::IType => {
                 let dest: u8 = parser::parse_register(components.get(1).unwrap());
@@ -66,7 +67,6 @@ impl Processor {
                 match components.get(0).unwrap().as_str() {
                     "ori" => {
                         self.set_value(dest, self.get_value(source).bitor(immediate as u32));
-                        self.pc += 4;
                     },
                     _ => {
                         panic!("Unhandled I-type instruction!");
@@ -81,7 +81,6 @@ impl Processor {
                     "and" => {
                         let temp = self.get_value(rs).bitand(self.get_value(rt));
                         self.set_value(dest, temp);
-                        self.pc += 4;
                     },
                     _ => {
                         panic!("Unhandled R-type instruction!");
@@ -92,6 +91,11 @@ impl Processor {
 
             }
         };
+        if branch {
+            // branching code
+        } else {
+            self.pc += 4;
+        }
     }
 
     pub fn get_instruction_count(&self) -> usize {
