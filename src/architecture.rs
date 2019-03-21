@@ -7,7 +7,8 @@ use crate::parser;
 pub enum InstructionType {
     RType,
     IType,
-    JType
+    JType,
+    Special
 }
 
 pub struct Instruction {
@@ -89,6 +90,16 @@ impl Processor {
             },
             InstructionType::JType => {
 
+            },
+            InstructionType::Special => {
+                match components.get(0).unwrap().as_str() {
+                    "nop" => {
+                        // Do nothing
+                    },
+                    _ => {
+
+                    }
+                }
             }
         };
         if branch {

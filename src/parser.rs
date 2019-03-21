@@ -16,15 +16,22 @@ pub fn parse_hexadecimal(hex_str: &str) -> u16 {
 pub fn parse_function(instruction: String) -> Option<architecture::Instruction> {
     let i_types = vec!["addi", "addiu", "slti", "sltiu", "andi", "ori", "xori", "lui"];
     let r_types = vec!["and"];
+    let special_types = vec!["nop"];
+    for instr_type in &r_types {
+        if instruction.starts_with(instr_type) {
+            let instr = architecture::Instruction { instruction: instruction.clone(), itype: architecture::InstructionType::RType };
+            return Some(instr);
+        }
+    }
     for instr_type in &i_types {
         if instruction.starts_with(instr_type) {
             let instr = architecture::Instruction { instruction: instruction.clone(), itype: architecture::InstructionType::IType };
             return Some(instr);
         }
     }
-    for instr_type in &r_types {
+    for instr_type in &special_types {
         if instruction.starts_with(instr_type) {
-            let instr = architecture::Instruction { instruction: instruction.clone(), itype: architecture::InstructionType::RType };
+            let instr = architecture::Instruction { instruction: instruction.clone(), itype: architecture::InstructionType::Special };
             return Some(instr);
         }
     }
