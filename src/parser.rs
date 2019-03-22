@@ -88,6 +88,15 @@ pub fn parse_register(register: &str) -> u8 {
     result
 }
 
+pub fn sign_extend(input: u32) -> i32 {
+    ((input as i32) << 16) >> 16
+}
+
 pub fn zero_extend(input: u16) -> u32 {
     (input as u32).shl(16)
+}
+
+#[test]
+fn test_sign_extend() {
+    assert_eq!(sign_extend(0xFFFF), -1);
 }
