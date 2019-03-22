@@ -1,7 +1,9 @@
+use std::ops::Shl;
+
 use crate::architecture;
 
-/// Parses a 16 character immediate into a number representation
-/// hex_str: The 16 char immediate
+/// Parses a 16-bit immediate into a number representation
+/// hex_str: The 16-bit immediate
 pub fn parse_hexadecimal(hex_str: &str) -> u16 {
     let hex_str = hex_str.replace("0x", "");
     let mut result: u16 = 0;
@@ -84,4 +86,8 @@ pub fn parse_register(register: &str) -> u8 {
         }
     };
     result
+}
+
+pub fn zero_extend(input: u16) -> u32 {
+    (input as u32).shl(16)
 }
