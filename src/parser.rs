@@ -93,10 +93,5 @@ pub fn sign_extend(input: u32) -> i32 {
 }
 
 pub fn zero_extend(input: u16) -> u32 {
-    (input as u32).shl(16)
-}
-
-#[test]
-fn test_sign_extend() {
-    assert_eq!(sign_extend(0xFFFF), -1);
+    (input as u32) << 16
 }
