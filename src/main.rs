@@ -28,6 +28,8 @@ fn main() {
         }
     }
 
-    proc.next();
-    proc.print_state();
+    for _ in 0..proc.get_instruction_count() {
+        proc.next();
+        proc.print_state();
+    }
 }
