@@ -23,7 +23,8 @@ pub struct Processor {
     hi: u32,
     lo: u32,
     instructions: Vec<Instruction>,
-    labels: HashMap<String, u32>
+    labels: HashMap<String, u32>,
+    memory: Vec<u8>,
 }
 
 impl Processor {
@@ -35,7 +36,8 @@ impl Processor {
             hi: 0x0,
             lo: 0x0,
             instructions: Vec::new(),
-            labels: HashMap::new()
+            labels: HashMap::new(),
+            memory: vec![0; 65536]
         };
         proc.gpr[29] = 0x7fffeffc;
         proc
@@ -64,20 +66,37 @@ impl Processor {
     }
 
     pub fn next(&mut self) {
-        println!("Current: {:X}", self.pc);
         let current: Option<&Instruction> = self.get_instruction(self.pc);
         match current {
             Some(instr) => {
-                let components: Vec<String> = instr.instruction.split(" ").map(|s| s.to_string().replace(',', "")).collect();
+                let opword: &str = instr.instruction.split_whitespace().next().unwrap_or("");
                 let mut branch: bool = false;
                 match instr.itype {
                     InstructionType::IType => {
-                        let dest: u8 = parser::parse_register(components.get(1).unwrap());
-                        let source: u8 = parser::parse_register(components.get(2).unwrap());
-                        let immediate: u16 = parser::parse_hexadecimal(components.get(3).unwrap());
-                        match components.get(0).unwrap().as_str() {
+                        match opword {
                             "ori" => {
+                                let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
                                 self.set_value(dest, self.get_value(source).bitor(immediate as u32));
+                            },
+                            "addi" => {
+                                let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
+                                self.set_value(dest, self.get_value(source) + immediate as u32);
+                            },
+                            "slti" => {
+                                let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
+                                if self.get_value(source) > immediate as u32 {
+                                    self.set_value(dest, 1);
+                                } else {
+                                    self.set_value(dest, 0);
+                                }
+                            },
+                            "andi" => {
+                                let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
+                                self.set_value(dest, self.get_value(source) & immediate as u32);
+                            },
+                            "lui" => {
+                                let (dest, immediate) = parser::get_dest_imm(instr.instruction.as_str());
+                                self.set_value(dest, (immediate as u32) << 16);
                             },
                             _ => {
                                 panic!("Unhandled I-type instruction!");
@@ -85,13 +104,11 @@ impl Processor {
                         }
                     },
                     InstructionType::RType => {
-                        let dest: u8 = parser::parse_register(components.get(1).unwrap());
-                        let rs: u8 = parser::parse_register(components.get(2).unwrap());
-                        let rt: u8 = parser::parse_register(components.get(3).unwrap());
-                        match components.get(0).unwrap().as_str() {
+                        let (rd, rs, rt) = parser::get_rs_rt_rd(instr.instruction.as_str());
+                        match opword {
                             "and" => {
                                 let temp = self.get_value(rs).bitand(self.get_value(rt));
-                                self.set_value(dest, temp);
+                                self.set_value(rd, temp);
                             },
                             _ => {
                                 panic!("Unhandled R-type instruction!");
@@ -99,15 +116,16 @@ impl Processor {
                         }
                     },
                     InstructionType::JType => {
-                        match components.get(0).unwrap().as_str() {
+                        match opword {
                             "j" => {
-                                if self.labels.contains_key(components.get(1).unwrap()) {
+                                let label = parser::get_label(instr.instruction.as_str());
+                                if self.labels.contains_key(label.as_str()) {
                                     branch = true;
-                                    self.pc = self.labels.get(components.get(1).unwrap()).clone().unwrap().clone();
+                                    self.pc = self.labels.get(label.as_str()).clone().unwrap().clone();
                                 }
                             },
                             "jr" => {
-                                self.pc = self.get_value(parser::parse_register(components.get(1).unwrap()));
+                                self.pc = self.get_value(parser::get_rt(instr.instruction.as_str()));
                             },
                             _ => {
                                 unreachable!();
@@ -115,7 +133,7 @@ impl Processor {
                         }
                     },
                     InstructionType::Special => {
-                        match components.get(0).unwrap().as_str() {
+                        match opword {
                             "nop" => {
                                 // Do nothing
                             },
