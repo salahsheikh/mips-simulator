@@ -1,5 +1,3 @@
-use std::ops::Shl;
-
 use crate::architecture;
 
 /// Parses a 16-bit immediate into a number representation
@@ -86,6 +84,40 @@ pub fn parse_register(register: &str) -> u8 {
         }
     };
     result
+}
+
+pub fn get_dest_src_imm(word: &str) -> (u8, u8, u16) {
+    let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
+    let dest: u8 = parse_register(components.get(1).unwrap());
+    let source: u8 = parse_register(components.get(2).unwrap());
+    let immediate: u16 = parse_hexadecimal(components.get(3).unwrap());
+    return (dest, source, immediate);
+}
+
+pub fn get_dest_imm(word: &str) -> (u8, u16) {
+    let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
+    let dest: u8 = parse_register(components.get(1).unwrap());
+    let immediate: u16 = parse_hexadecimal(components.get(2).unwrap());
+    return (dest, immediate);
+}
+
+pub fn get_rs_rt_rd(word: &str) -> (u8, u8, u8) {
+    let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
+    let rd: u8 = parse_register(components.get(1).unwrap());
+    let rs: u8 = parse_register(components.get(2).unwrap());
+    let rt: u8 = parse_register(components.get(3).unwrap());
+    return (rd, rs, rt);
+}
+
+pub fn get_label(word: &str) -> String {
+    let mut components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
+    components.get(1).unwrap().clone()
+}
+
+pub fn get_rt(word: &str) -> u8 {
+    let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
+    let target = parse_register(components.get(1).unwrap());
+    return target
 }
 
 pub fn sign_extend(input: u32) -> i32 {
