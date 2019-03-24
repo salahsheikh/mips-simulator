@@ -86,16 +86,19 @@ pub fn parse_register(register: &str) -> u8 {
     result
 }
 
+fn parse_immediate(imm: &String) -> i16 {
+    if imm.starts_with("0x") {
+        return parse_hexadecimal(imm.as_str());
+    } else {
+        return imm.parse::<i16>().unwrap();
+    }
+}
+
 pub fn get_dest_src_imm(word: &str) -> (u8, u8, i16) {
     let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
     let dest: u8 = parse_register(components.get(1).unwrap());
     let source: u8 = parse_register(components.get(2).unwrap());
-    let immediate_str = components.get(3).unwrap();
-    if components.get(3).unwrap().starts_with("0x") {
-        return (dest, source, parse_hexadecimal(immediate_str.as_str()));
-    } else {
-        return (dest, source, immediate_str.parse::<i16>().unwrap());
-    }
+    return (dest, source, parse_immediate(components.get(3).unwrap()));
 }
 
 pub fn get_dest_imm(word: &str) -> (u8, i16) {
