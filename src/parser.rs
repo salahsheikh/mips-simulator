@@ -10,7 +10,7 @@ pub fn parse_hexadecimal(hex_str: &str) -> i32 {
 pub fn parse_function(instruction: String) -> Option<architecture::Instruction> {
     let i_types = vec!["addi", "addiu", "slti", "sltiu", "andi", "ori", "xori", "lui"];
     let r_types = vec!["and", "or", "nor"];
-    let special_types = vec!["nop"];
+    let special_types = vec!["nop", "sll", "srl"];
     let j_types = vec!["j", "jr"];
     let opword: &str = instruction.split_whitespace().next().unwrap_or("");
     for instr_type in &r_types {
