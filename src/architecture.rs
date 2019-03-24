@@ -21,6 +21,7 @@ pub enum Instructions {
     ADDI(u8, u8, i32)
 }
 
+#[allow(dead_code)]
 pub struct Processor {
     gpr: [i32; 32],
     pc: u32,
@@ -91,9 +92,17 @@ impl Processor {
                         "slti" => {
                             let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
                             if self.get_value(source) > immediate as i32 {
-                                self.set_value(dest, 1);
-                            } else {
                                 self.set_value(dest, 0);
+                            } else {
+                                self.set_value(dest, 1);
+                            }
+                        },
+                        "sltiu" => {
+                            let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
+                            if self.get_value(source) as u32 > immediate as u32 {
+                                self.set_value(dest, 0);
+                            } else {
+                                self.set_value(dest, 1);
                             }
                         },
                         "andi" => {
