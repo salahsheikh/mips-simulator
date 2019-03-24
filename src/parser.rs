@@ -2,42 +2,37 @@ use crate::architecture;
 
 /// Parses a 16-bit immediate into a number representation
 /// hex_str: The 16-bit immediate
-pub fn parse_hexadecimal(hex_str: &str) -> i16 {
+pub fn parse_hexadecimal(hex_str: &str) -> i32 {
     let hex_str = hex_str.replace("0x", "");
-    let mut result: i16 = 0;
-    for (i, c) in hex_str.chars().enumerate() {
-        let representation: i16 = c.to_digit(16).unwrap() as i16;
-        let power = (hex_str.len() - i - 1) as u32;
-        result += 16i16.pow(power) * representation;
-    }
-    result
+    i32::from_str_radix(hex_str.as_str(), 16).unwrap()
 }
 
 pub fn parse_function(instruction: String) -> Option<architecture::Instruction> {
     let i_types = vec!["addi", "addiu", "slti", "sltiu", "andi", "ori", "xori", "lui"];
-    let r_types = vec!["and"];
+    let r_types = vec!["and", "or", "nor"];
     let special_types = vec!["nop"];
     let j_types = vec!["j", "jr"];
+    let opword: &str = instruction.split_whitespace().next().unwrap_or("");
     for instr_type in &r_types {
-        if instruction.starts_with(instr_type) {
+        if opword.eq(*instr_type) {
             let instr = architecture::Instruction { instruction: instruction.clone(), itype: architecture::InstructionType::RType };
             return Some(instr);
         }
     }
     for instr_type in &i_types {
-        if instruction.starts_with(instr_type) {
+        if opword.eq(*instr_type) {
             let instr = architecture::Instruction { instruction: instruction.clone(), itype: architecture::InstructionType::IType };
             return Some(instr);
         }
     }
     for instr_type in &j_types {
-        if instruction.starts_with(instr_type) {
+        if opword.eq(*instr_type) {
             let instr = architecture::Instruction { instruction: instruction.clone(), itype: architecture::InstructionType::JType };
             return Some(instr);
         }
     }
     for instr_type in &special_types {
-        if instruction.starts_with(instr_type) {
+        if opword.eq(*instr_type) {
             let instr = architecture::Instruction { instruction: instruction.clone(), itype: architecture::InstructionType::Special };
             return Some(instr);
         }
@@ -80,35 +75,36 @@ pub fn parse_register(register: &str) -> u8 {
         "$fp" => 30,
         "$ra" => 31,
         _ => {
-            panic!("Invalid register type!");
+            panic!("Invalid register type! {}", register);
         }
     };
     result
 }
 
-fn parse_immediate(imm: &String) -> i16 {
+fn parse_immediate(imm: &String) -> i32 {
     if imm.starts_with("0x") {
         return parse_hexadecimal(imm.as_str());
     } else {
-        return imm.parse::<i16>().unwrap();
+        return imm.parse::<i32>().unwrap();
     }
 }
 
-pub fn get_dest_src_imm(word: &str) -> (u8, u8, i16) {
+pub fn get_dest_src_imm(word: &str) -> (u8, u8, i32) {
     let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
     let dest: u8 = parse_register(components.get(1).unwrap());
     let source: u8 = parse_register(components.get(2).unwrap());
     return (dest, source, parse_immediate(components.get(3).unwrap()));
 }
 
-pub fn get_dest_imm(word: &str) -> (u8, i16) {
+pub fn get_dest_imm(word: &str) -> (u8, i32) {
     let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
     let dest: u8 = parse_register(components.get(1).unwrap());
-    let immediate: i16 = parse_hexadecimal(components.get(2).unwrap());
+    let immediate: i32 = parse_hexadecimal(components.get(2).unwrap());
     return (dest, immediate);
 }
 
 pub fn get_rs_rt_rd(word: &str) -> (u8, u8, u8) {
+    eprintln!("{}", word);
     let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
     let rd: u8 = parse_register(components.get(1).unwrap());
     let rs: u8 = parse_register(components.get(2).unwrap());
