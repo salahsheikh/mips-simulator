@@ -4,6 +4,8 @@ use std::ops::BitAnd;
 use crate::parser;
 use std::collections::HashMap;
 
+use prettytable::Table;
+
 #[derive(Debug)]
 pub enum InstructionType {
     RType,
@@ -195,7 +197,12 @@ impl Processor {
     }
 
     pub fn print_state(&self) {
-        println!("{:?}\n {}, {}, {:X}", self.gpr, self.hi, self.lo, self.pc);
+        let mut table = Table::new();
+        for i in 0..32 {
+            table.add_row(row![i, format!("{:x}", self.gpr[i])]);
+        }
+        table.add_row(row!["PC", format!("{:x}", self.pc)]);
+        table.printstd();
     }
 
 }

@@ -8,6 +8,8 @@ pub mod parser;
 extern crate clap;
 use clap::{Arg, App};
 
+#[macro_use] extern crate prettytable;
+
 fn main() {
     let matches = App::new("MIPS Simulator")
         .version("0.1")
