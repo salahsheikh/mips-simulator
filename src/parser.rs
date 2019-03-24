@@ -104,7 +104,6 @@ pub fn get_dest_imm(word: &str) -> (u8, i32) {
 }
 
 pub fn get_rs_rt_rd(word: &str) -> (u8, u8, u8) {
-    eprintln!("{}", word);
     let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
     let rd: u8 = parse_register(components.get(1).unwrap());
     let rs: u8 = parse_register(components.get(2).unwrap());
