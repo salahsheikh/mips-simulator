@@ -2,13 +2,13 @@ use crate::architecture;
 
 /// Parses a 16-bit immediate into a number representation
 /// hex_str: The 16-bit immediate
-pub fn parse_hexadecimal(hex_str: &str) -> u16 {
+pub fn parse_hexadecimal(hex_str: &str) -> i16 {
     let hex_str = hex_str.replace("0x", "");
-    let mut result: u16 = 0;
+    let mut result: i16 = 0;
     for (i, c) in hex_str.chars().enumerate() {
-        let representation: u16 = c.to_digit(16).unwrap() as u16;
+        let representation: i16 = c.to_digit(16).unwrap() as i16;
         let power = (hex_str.len() - i - 1) as u32;
-        result += 16u16.pow(power) * representation;
+        result += 16i16.pow(power) * representation;
     }
     result
 }
@@ -86,18 +86,22 @@ pub fn parse_register(register: &str) -> u8 {
     result
 }
 
-pub fn get_dest_src_imm(word: &str) -> (u8, u8, u16) {
+pub fn get_dest_src_imm(word: &str) -> (u8, u8, i16) {
     let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
     let dest: u8 = parse_register(components.get(1).unwrap());
     let source: u8 = parse_register(components.get(2).unwrap());
-    let immediate: u16 = parse_hexadecimal(components.get(3).unwrap());
-    return (dest, source, immediate);
+    let immediate_str = components.get(3).unwrap();
+    if components.get(3).unwrap().starts_with("0x") {
+        return (dest, source, parse_hexadecimal(immediate_str.as_str()));
+    } else {
+        return (dest, source, immediate_str.parse::<i16>().unwrap());
+    }
 }
 
-pub fn get_dest_imm(word: &str) -> (u8, u16) {
+pub fn get_dest_imm(word: &str) -> (u8, i16) {
     let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
     let dest: u8 = parse_register(components.get(1).unwrap());
-    let immediate: u16 = parse_hexadecimal(components.get(2).unwrap());
+    let immediate: i16 = parse_hexadecimal(components.get(2).unwrap());
     return (dest, immediate);
 }
 

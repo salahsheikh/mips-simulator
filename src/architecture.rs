@@ -17,8 +17,12 @@ pub struct Instruction {
     pub itype: InstructionType
 }
 
+pub enum Instructions {
+    ADDI(u8, u8, i32)
+}
+
 pub struct Processor {
-    gpr: [u32; 32],
+    gpr: [i32; 32],
     pc: u32,
     hi: u32,
     lo: u32,
@@ -43,13 +47,13 @@ impl Processor {
         proc
     }
 
-    pub fn set_value(&mut self, destination_gpr: u8, new_value: u32) {
+    pub fn set_value(&mut self, destination_gpr: u8, new_value: i32) {
         if destination_gpr != 0 {
             self.gpr[destination_gpr as usize] = new_value;
         }
     }
 
-    pub fn get_value(&self, source_gpr: u8) -> u32 {
+    pub fn get_value(&self, source_gpr: u8) -> i32 {
         self.gpr[source_gpr as usize]
     }
 
@@ -76,15 +80,15 @@ impl Processor {
                         match opword {
                             "ori" => {
                                 let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
-                                self.set_value(dest, self.get_value(source).bitor(immediate as u32));
+                                self.set_value(dest, self.get_value(source).bitor(immediate as i32));
                             },
                             "addi" => {
                                 let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
-                                self.set_value(dest, self.get_value(source) + immediate as u32);
+                                self.set_value(dest, self.get_value(source) + immediate as i32);
                             },
                             "slti" => {
                                 let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
-                                if self.get_value(source) > immediate as u32 {
+                                if self.get_value(source) > immediate as i32 {
                                     self.set_value(dest, 1);
                                 } else {
                                     self.set_value(dest, 0);
@@ -92,11 +96,11 @@ impl Processor {
                             },
                             "andi" => {
                                 let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
-                                self.set_value(dest, self.get_value(source) & immediate as u32);
+                                self.set_value(dest, self.get_value(source) & immediate as i32);
                             },
                             "lui" => {
                                 let (dest, immediate) = parser::get_dest_imm(instr.instruction.as_str());
-                                self.set_value(dest, (immediate as u32) << 16);
+                                self.set_value(dest, (immediate as i32) << 16);
                             },
                             _ => {
                                 panic!("Unhandled I-type instruction!");
@@ -109,6 +113,12 @@ impl Processor {
                             "and" => {
                                 let temp = self.get_value(rs).bitand(self.get_value(rt));
                                 self.set_value(rd, temp);
+                            },
+                            "add" => {
+                                self.set_value(rd, self.get_value(rs) + self.get_value(rt));
+                            },
+                            "add" => {
+                                self.set_value(rd, self.get_value(rs) - self.get_value(rt));
                             },
                             _ => {
                                 panic!("Unhandled R-type instruction!");
@@ -125,7 +135,7 @@ impl Processor {
                                 }
                             },
                             "jr" => {
-                                self.pc = self.get_value(parser::get_rt(instr.instruction.as_str()));
+                                self.pc = self.get_value(parser::get_rt(instr.instruction.as_str())) as u32;
                             },
                             _ => {
                                 unreachable!();
