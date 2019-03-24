@@ -40,7 +40,7 @@ fn main() {
         }
     }
 
-    for _ in 0..proc.get_instruction_count() {
+    while proc.is_running() {
         proc.next();
         proc.print_state();
     }

@@ -29,6 +29,7 @@ pub struct Processor {
     instructions: Vec<Instruction>,
     labels: HashMap<String, u32>,
     memory: Vec<u8>,
+    is_running: bool
 }
 
 impl Processor {
@@ -41,7 +42,8 @@ impl Processor {
             lo: 0x0,
             instructions: Vec::new(),
             labels: HashMap::new(),
-            memory: vec![0; 65536]
+            memory: vec![0; 65536],
+            is_running: true
         };
         proc.gpr[29] = 0x7fffeffc;
         proc
@@ -71,94 +73,98 @@ impl Processor {
 
     pub fn next(&mut self) {
         let current: Option<&Instruction> = self.get_instruction(self.pc);
-        match current {
-            Some(instr) => {
-                let opword: &str = instr.instruction.split_whitespace().next().unwrap_or("");
-                let mut branch: bool = false;
-                match instr.itype {
-                    InstructionType::IType => {
-                        match opword {
-                            "ori" => {
-                                let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
-                                self.set_value(dest, self.get_value(source).bitor(immediate as i32));
-                            },
-                            "addi" => {
-                                let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
-                                self.set_value(dest, self.get_value(source) + immediate as i32);
-                            },
-                            "slti" => {
-                                let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
-                                if self.get_value(source) > immediate as i32 {
-                                    self.set_value(dest, 1);
-                                } else {
-                                    self.set_value(dest, 0);
-                                }
-                            },
-                            "andi" => {
-                                let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
-                                self.set_value(dest, self.get_value(source) & immediate as i32);
-                            },
-                            "lui" => {
-                                let (dest, immediate) = parser::get_dest_imm(instr.instruction.as_str());
-                                self.set_value(dest, (immediate as i32) << 16);
-                            },
-                            _ => {
-                                panic!("Unhandled I-type instruction!");
+        if current.is_some() {
+            let instr = current.unwrap();
+            let opword: &str = instr.instruction.split_whitespace().next().unwrap_or("");
+            let mut branch: bool = false;
+            match instr.itype {
+                InstructionType::IType => {
+                    match opword {
+                        "ori" => {
+                            let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
+                            self.set_value(dest, self.get_value(source).bitor(immediate as i32));
+                        },
+                        "addi" => {
+                            let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
+                            self.set_value(dest, self.get_value(source) + immediate as i32);
+                        },
+                        "slti" => {
+                            let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
+                            if self.get_value(source) > immediate as i32 {
+                                self.set_value(dest, 1);
+                            } else {
+                                self.set_value(dest, 0);
                             }
-                        }
-                    },
-                    InstructionType::RType => {
-                        let (rd, rs, rt) = parser::get_rs_rt_rd(instr.instruction.as_str());
-                        match opword {
-                            "and" => {
-                                let temp = self.get_value(rs).bitand(self.get_value(rt));
-                                self.set_value(rd, temp);
-                            },
-                            "add" => {
-                                self.set_value(rd, self.get_value(rs) + self.get_value(rt));
-                            },
-                            "sub" => {
-                                self.set_value(rd, self.get_value(rs) - self.get_value(rt));
-                            },
-                            _ => {
-                                panic!("Unhandled R-type instruction!");
-                            }
-                        }
-                    },
-                    InstructionType::JType => {
-                        match opword {
-                            "j" => {
-                                let label = parser::get_label(instr.instruction.as_str());
-                                if self.labels.contains_key(label.as_str()) {
-                                    branch = true;
-                                    self.pc = self.labels.get(label.as_str()).clone().unwrap().clone();
-                                }
-                            },
-                            "jr" => {
-                                self.pc = self.get_value(parser::get_rt(instr.instruction.as_str())) as u32;
-                            },
-                            _ => {
-                                unreachable!();
-                            }
-                        }
-                    },
-                    InstructionType::Special => {
-                        match opword {
-                            "nop" => {
-                                // Do nothing
-                            },
-                            _ => {
-
-                            }
+                        },
+                        "andi" => {
+                            let (dest, source, immediate) = parser::get_dest_src_imm(instr.instruction.as_str());
+                            self.set_value(dest, self.get_value(source) & immediate as i32);
+                        },
+                        "lui" => {
+                            let (dest, immediate) = parser::get_dest_imm(instr.instruction.as_str());
+                            self.set_value(dest, (immediate as i32) << 16);
+                        },
+                        _ => {
+                            panic!("Unhandled I-type instruction!");
                         }
                     }
-                };
-                if !branch {
-                    self.pc += 4;
+                },
+                InstructionType::RType => {
+                    let (rd, rs, rt) = parser::get_rs_rt_rd(instr.instruction.as_str());
+                    match opword {
+                        "and" => {
+                            let temp = self.get_value(rs).bitand(self.get_value(rt));
+                            self.set_value(rd, temp);
+                        },
+                        "add" => {
+                            self.set_value(rd, self.get_value(rs) + self.get_value(rt));
+                        },
+                        "sub" => {
+                            self.set_value(rd, self.get_value(rs) - self.get_value(rt));
+                        },
+                        _ => {
+                            panic!("Unhandled R-type instruction!");
+                        }
+                    }
+                },
+                InstructionType::JType => {
+                    match opword {
+                        "j" => {
+                            let label = parser::get_label(instr.instruction.as_str());
+                            if self.labels.contains_key(label.as_str()) {
+                                branch = true;
+                                self.pc = self.labels.get(label.as_str()).clone().unwrap().clone();
+                            }
+                        },
+                        "jr" => {
+                            self.pc = self.get_value(parser::get_rt(instr.instruction.as_str())) as u32;
+                        },
+                        _ => {
+                            unreachable!();
+                        }
+                    }
+                },
+                InstructionType::Special => {
+                    match opword {
+                        "nop" => {
+                            // Do nothing
+                        },
+                        _ => {
+
+                        }
+                    }
                 }
-            },
-            None => {}
+            };
+            if !branch {
+                self.pc += 4;
+            }
+        } else {
+            self.is_running = false;
         }
+    }
+
+    pub fn is_running(&self) -> bool {
+        return self.is_running;
     }
 
     pub fn get_instruction_count(&self) -> usize {
