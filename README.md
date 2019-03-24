@@ -6,7 +6,7 @@ Currently it can perform basic arithmetic and logical instructions in addition t
 # Usage
 
 Sample final output for input:
-```mips
+```assembly
 addi $t0, $zero, 0x0f00
 srl $t1, $t0, 4
 sll $t2, $t0, 4
