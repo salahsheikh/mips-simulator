@@ -102,7 +102,7 @@ impl Processor {
                         },
                         "lui" => {
                             let (dest, immediate) = parser::get_dest_imm(instr.instruction.as_str());
-                            self.set_value(dest, (immediate as i32) << 16);
+                            self.set_value(dest, immediate << 16);
                         },
                         _ => {
                             panic!("Unhandled I-type instruction!");
@@ -115,6 +115,12 @@ impl Processor {
                         "and" => {
                             let temp = self.get_value(rs).bitand(self.get_value(rt));
                             self.set_value(rd, temp);
+                        },
+                        "or" => {
+                            self.set_value(rd, self.get_value(rs) & self.get_value(rt));
+                        },
+                        "nor" => {
+                            self.set_value(rd, !(self.get_value(rs) | self.get_value(rt)));
                         },
                         "add" => {
                             self.set_value(rd, self.get_value(rs) + self.get_value(rt));
