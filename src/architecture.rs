@@ -2,6 +2,7 @@ use std::ops::BitOr;
 use std::ops::BitAnd;
 
 use crate::parser;
+use crate::helper;
 use std::collections::HashMap;
 
 use prettytable::Table;
@@ -199,9 +200,9 @@ impl Processor {
     pub fn print_state(&self) {
         let mut table = Table::new();
         for i in 0..32 {
-            table.add_row(row![i, format!("{:x}", self.gpr[i])]);
+            table.add_row(row![parser::register_name(i), helper::format_as_word(self.gpr[i as usize] as u32)]);
         }
-        table.add_row(row!["PC", format!("{:x}", self.pc)]);
+        table.add_row(row!["PC", helper::format_as_word(self.pc)]);
         table.printstd();
     }
 
