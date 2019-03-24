@@ -117,7 +117,7 @@ impl Processor {
                             "add" => {
                                 self.set_value(rd, self.get_value(rs) + self.get_value(rt));
                             },
-                            "add" => {
+                            "sub" => {
                                 self.set_value(rd, self.get_value(rs) - self.get_value(rt));
                             },
                             _ => {
