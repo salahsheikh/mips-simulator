@@ -117,7 +117,7 @@ pub fn get_rs_rt_rd(word: &str) -> (u8, u8, u8) {
 }
 
 pub fn get_label(word: &str) -> String {
-    let mut components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
+    let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
     components.get(1).unwrap().clone()
 }
 
