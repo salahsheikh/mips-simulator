@@ -164,6 +164,14 @@ impl Processor {
                         "nop" => {
                             // Do nothing
                         },
+                        "srl" => {
+                            let (rd, rs, count) = parser::get_rd_rs_count(instr.instruction.as_str());
+                            self.set_value(rd, self.get_value(rs) >> count);
+                        },
+                        "sll" => {
+                            let (rd, rs, count) = parser::get_rd_rs_count(instr.instruction.as_str());
+                            self.set_value(rd, self.get_value(rs) << count);
+                        },
                         _ => {
 
                         }

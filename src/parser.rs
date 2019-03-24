@@ -111,6 +111,14 @@ pub fn get_rs_rt_rd(word: &str) -> (u8, u8, u8) {
     return (rd, rs, rt);
 }
 
+pub fn get_rd_rs_count(word: &str) -> (u8, u8, u16) {
+    let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
+    let rd: u8 = parse_register(components.get(1).unwrap());
+    let rs: u8 = parse_register(components.get(2).unwrap());
+    let count: u16 = components.get(3).unwrap().parse::<u16>().unwrap();
+    return (rd, rs, count);
+}
+
 pub fn get_label(word: &str) -> String {
     let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
     components.get(1).unwrap().clone()
