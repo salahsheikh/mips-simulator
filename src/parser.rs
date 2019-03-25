@@ -10,7 +10,7 @@ pub fn parse_hexadecimal(hex_str: &str) -> i32 {
 pub fn parse_function(instruction: String) -> Option<architecture::Instruction> {
     let i_types = vec!["addi", "addiu", "slti", "sltiu", "andi", "ori", "xori", "lui"];
     let r_types = vec!["and", "or", "nor"];
-    let special_types = vec!["nop", "sll", "srl"];
+    let special_types = vec!["nop", "sll", "srl", "lw", "sw"];
     let j_types = vec!["j", "jr"];
     let opword: &str = instruction.split_whitespace().next().unwrap_or("");
     for instr_type in &r_types {
@@ -169,6 +169,14 @@ pub fn get_rt(word: &str) -> u8 {
     let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
     let target = parse_register(components.get(1).unwrap());
     return target;
+}
+
+/// Returns the register that holds the address of the memory location being read or written to.
+pub fn get_memory_register(word: &str) -> (u8, u8) {
+    let components: Vec<String> = word.split_whitespace().map(|s| s.to_string().replace(',', "")).collect();
+    let target = parse_register(components.get(1).unwrap());
+    let target2 = parse_register(components.get(2).unwrap().replace("(", "").replace(")", "").as_str());
+    return (target, target2);
 }
 
 pub fn sign_extend(input: u32) -> i32 {

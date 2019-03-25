@@ -1,3 +1,7 @@
-addi $t0, $zero, 0x0f00
-srl $t1, $t0, 4
-sll $t2, $t0, 4
+addi $t0, $zero, 10
+lui $t1, 0x1001
+
+addi $t0, $t0, 2
+sw $t0, ($t1)
+
+lw $t2, ($t1)

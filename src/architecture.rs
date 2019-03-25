@@ -32,7 +32,7 @@ pub struct Processor {
     lo: u32,
     instructions: Vec<Instruction>,
     labels: HashMap<String, u32>,
-    memory: Vec<u8>,
+    memory: [u32; 65536],
     is_running: bool
 }
 
@@ -46,7 +46,7 @@ impl Processor {
             lo: 0x0,
             instructions: Vec::new(),
             labels: HashMap::new(),
-            memory: vec![0; 65536],
+            memory: [0; 65536],
             is_running: true
         };
         proc.gpr[29] = 0x7fffeffc;
@@ -73,6 +73,14 @@ impl Processor {
 
     fn get_instruction(&self, address: u32) -> Option<&Instruction> {
         self.instructions.get((address - 0x00400000) as usize / 4)
+    }
+
+    fn store_word(&mut self, address: u32, word: u32) {
+        self.memory[(address - 0x10010000) as usize / 4] = word;
+    }
+
+    fn load_word(&self, address: u32) -> u32 {
+        self.memory[(address - 0x10010000) as usize / 4]
     }
 
     pub fn next(&mut self) {
@@ -175,6 +183,14 @@ impl Processor {
                             let (rd, rs, count) = parser::get_rd_rs_count(instr.instruction.as_str());
                             self.set_value(rd, self.get_value(rs) << count);
                         },
+                        "sw" => {
+                            let (source, target) = parser::get_memory_register(instr.instruction.as_str());
+                            self.store_word(self.get_value(target) as u32, self.get_value(source) as u32);
+                        },
+                        "lw" => {
+                            let (target, source) = parser::get_memory_register(instr.instruction.as_str());
+                            self.set_value(target, self.load_word(self.get_value(source) as u32) as i32);
+                        },
                         _ => {
 
                         }
@@ -204,6 +220,12 @@ impl Processor {
         }
         table.add_row(row!["PC", helper::format_as_word(self.pc)]);
         table.printstd();
+    }
+
+    pub fn dump_data_memory(&self, from: u32, to: u32) {
+        for address in (from..to).step_by(4) {
+            println!("{}: {}", helper::format_as_word(address), helper::format_as_word(self.load_word(address)));
+        }
     }
 
 }
