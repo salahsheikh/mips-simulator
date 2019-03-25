@@ -71,7 +71,7 @@ impl Processor {
     }
 
     pub fn add_label(&mut self, label: String) {
-        self.labels.insert(label.replace(':', ""), self.pc);
+        self.labels.insert(label.replace(':', ""), (self.instructions.len() * 4) as u32 + 0x00400000);
     }
 
     pub fn add_instruction(&mut self, instr: Instruction) {
@@ -170,7 +170,18 @@ impl Processor {
                             }
                         },
                         "jr" => {
-                            self.pc = self.get_value(parser::get_rt(instr.instruction.as_str())) as u32;
+                            let rt = parser::get_rt(instr.instruction.as_str());
+                            self.pc = self.get_value(rt) as u32;
+                            println!("jumped to {:x}", self.pc);
+                        },
+                        "jal" => {
+                            let label = parser::get_label(instr.instruction.as_str());
+                            if self.labels.contains_key(label.as_str()) {
+                                branch = true;
+                                self.set_value(31, (self.pc) as i32);
+                                println!("setting ra to {:x}", (self.pc + 4) as i32);
+                                self.pc = self.labels.get(label.as_str()).clone().unwrap().clone();
+                            }
                         },
                         _ => {
                             unreachable!();
@@ -208,6 +219,7 @@ impl Processor {
                 self.pc += 4;
             }
         } else {
+            println!("End of instructions!");
             self.is_running = false;
         }
     }
@@ -218,6 +230,14 @@ impl Processor {
 
     pub fn get_instruction_count(&self) -> usize {
         self.instructions.len()
+    }
+
+    pub fn get_pc(&self) -> u32 {
+        self.pc
+    }
+
+    pub fn print_labels(&self) {
+        println!("{:X?}", self.labels);
     }
 
     pub fn print_state(&self) {
