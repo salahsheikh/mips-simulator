@@ -7,6 +7,13 @@ use std::collections::HashMap;
 
 use prettytable::Table;
 
+pub enum Faults {
+    BadAddress,
+    BadJump,
+    SyntaxError,
+    NoFault
+}
+
 #[derive(Debug)]
 pub enum InstructionType {
     RType,
