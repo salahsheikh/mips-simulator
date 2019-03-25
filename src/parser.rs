@@ -11,7 +11,7 @@ pub fn parse_function(instruction: String) -> Option<architecture::Instruction> 
     let i_types = vec!["addi", "addiu", "slti", "sltiu", "andi", "ori", "xori", "lui"];
     let r_types = vec!["and", "or", "nor"];
     let special_types = vec!["nop", "sll", "srl", "lw", "sw"];
-    let j_types = vec!["j", "jr"];
+    let j_types = vec!["j", "jr", "jal"];
     let opword: &str = instruction.split_whitespace().next().unwrap_or("");
     for instr_type in &r_types {
         if opword.eq(*instr_type) {
