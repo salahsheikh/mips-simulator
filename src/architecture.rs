@@ -6,6 +6,10 @@ use crate::helper;
 use std::collections::HashMap;
 
 use prettytable::Table;
+use prettytable::Row;
+use prettytable::Cell;
+use prettytable::Attr;
+use prettytable::color;
 
 pub enum Faults {
     BadAddress,
@@ -242,10 +246,18 @@ impl Processor {
 
     pub fn print_state(&self) {
         let mut table = Table::new();
-        for i in 0..32 {
-            table.add_row(row![parser::register_name(i), helper::format_as_word(self.gpr[i as usize] as u32)]);
+        for i in 0..8 {
+            table.add_row(row![
+                parser::register_name(i), helper::format_as_word(self.gpr[i as usize] as u32),
+                parser::register_name(i + 8), helper::format_as_word(self.gpr[(i + 8) as usize] as u32),
+                parser::register_name(i + 16), helper::format_as_word(self.gpr[(i + 16) as usize] as u32),
+                parser::register_name(i + 24), helper::format_as_word(self.gpr[(i + 24) as usize] as u32)
+            ]);
         }
-        table.add_row(row!["PC", helper::format_as_word(self.pc)]);
+        table.add_row(Row::new(vec![Cell::new("PC"), Cell::new(helper::format_as_word(self.pc).as_str())
+                                        .with_style(Attr::BackgroundColor(color::RED))
+                                        .with_style(Attr::Italic(true))
+                                        .with_hspan(5)]));
         table.printstd();
     }
 
