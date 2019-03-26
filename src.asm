@@ -1,7 +1,12 @@
-addi $t0, $zero, 10
-lui $t1, 0x1001
+j main
+foobar:
+addi $t0, $zero, 1
+jr $ra
 
-addi $t0, $t0, 2
-sw $t0, ($t1)
-
-lw $t2, ($t1)
+main:
+addi $t1, $zero, 2
+jal foobar
+addi $t2, $zero, 3
+lui $s0, 0x1001
+sw $t2, ($s0)
+lw $t3, ($s0)
