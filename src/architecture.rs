@@ -176,14 +176,12 @@ impl Processor {
                         "jr" => {
                             let rt = parser::get_rt(instr.instruction.as_str());
                             self.pc = self.get_value(rt) as u32;
-                            println!("jumped to {:x}", self.pc);
                         },
                         "jal" => {
                             let label = parser::get_label(instr.instruction.as_str());
                             if self.labels.contains_key(label.as_str()) {
                                 branch = true;
                                 self.set_value(31, (self.pc) as i32);
-                                println!("setting ra to {:x}", (self.pc + 4) as i32);
                                 self.pc = self.labels.get(label.as_str()).clone().unwrap().clone();
                             }
                         },
@@ -223,7 +221,6 @@ impl Processor {
                 self.pc += 4;
             }
         } else {
-            println!("End of instructions!");
             self.is_running = false;
         }
     }
@@ -246,6 +243,7 @@ impl Processor {
 
     pub fn print_state(&self) {
         let mut table = Table::new();
+        table.add_row(Row::new(vec![Cell::new("All GPR Values").with_hspan(8)]));
         for i in 0..8 {
             table.add_row(row![
                 parser::register_name(i), helper::format_as_word(self.gpr[i as usize] as u32),
@@ -262,9 +260,12 @@ impl Processor {
     }
 
     pub fn dump_data_memory(&self, from: u32, to: u32) {
+        let mut table = Table::new();
+        table.add_row(Row::new(vec![Cell::new(format!("Memory Segment from {:x} to {:x}", from, to).as_str()).with_hspan(2)]));
         for address in (from..to).step_by(4) {
-            println!("{}: {}", helper::format_as_word(address), helper::format_as_word(self.load_word(address)));
+            table.add_row(row![helper::format_as_word(address), helper::format_as_word(self.load_word(address))]);
         }
+        table.printstd();
     }
 
 }
