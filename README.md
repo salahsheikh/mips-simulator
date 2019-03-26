@@ -1,4 +1,4 @@
-# mips-simulator
+# mips-simulator [![Build Status](https://travis-ci.org/salahsheikh/mips-simulator.svg?branch=master)](https://travis-ci.org/salahsheikh/mips-simulator)
 A MIPS simulator written in Rust
 
 Currently it can perform basic arithmetic and logical instructions in addition to jumping to labels.
