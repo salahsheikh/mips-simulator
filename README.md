@@ -66,6 +66,10 @@ lw $t3, ($s0)
 | Tests | Incomplete |
 | Breakpoints | Incomplete |
 
+# Contributing
+
+Pull requests are welcome! If bugs are found, please report them as Issues under the Issues tab.
+
 # Dependences 
 clap: 2.32
 prettytable-rs: 0.8
